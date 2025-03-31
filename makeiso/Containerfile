@@ -1,0 +1,16 @@
+FROM registry.access.redhat.com/ubi9/ubi-init:latest
+
+COPY create-iso.sh $HOME/create-iso.sh
+
+VOLUME /ks /iso /output
+
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    lorax \
+    skopeo \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+CMD [ "/sbin/init" ]

@@ -1,0 +1,52 @@
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+USER root
+
+COPY requirements.yml /home/requirements.yml
+
+# Install base system packages
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    podman \
+    rsync \
+    genisoimage \
+    httpd \
+    weldr-client \
+    python3 \
+    lorax \
+    pykickstart \
+    coreutils \
+    glibc-minimal-langpack \
+    mtools \
+    xorriso \
+    isomd5sum \
+    butane \
+    rpmdevtools \
+    rpmlint \
+    yum-utils \
+    createrepo \
+    tree \
+    python3-pip \
+    python3-toml \
+    gnupg \
+    vim-enhanced \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install Image builder
+RUN yum \
+    install -y \ 
+    osbuild-composer composer-cli cockpit-composer bash-completion awscli
+
+# Install ansible and run a playbook to configure this system with image builder
+RUN dnf \
+    install -y \
+    ansible-core \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN ansible-galaxy collection install -r /home/requirements.yml
+
+CMD [ "/sbin/init" ]

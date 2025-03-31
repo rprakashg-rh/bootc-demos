@@ -1,0 +1,10 @@
+[[blueprint.customizations.user]]
+name = "ansible"
+password = "$6$QQd+iT/fq2ltrl6g$ZIkWD/5xWIIv0vIFQM414fjRSRIDK45.7XKPZK8fEFdnPF4nuIESh/4CvYiZeFhhuv4OkDgK0RD.BDKo1tCsY/"
+groups = ["wheel"]
+home = "/home/ansible"
+shell = "/bin/bash"
+sudo = ["ALL=(ALL) NOPASSWD:ALL"]
+
+[[blueprint.customizations.systemd]]
+enabled = ["osbuild-composer.socket", "cockpit.socket", "podman.socket", "httpd.service"]

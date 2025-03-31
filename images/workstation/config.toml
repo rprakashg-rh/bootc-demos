@@ -1,0 +1,7 @@
+
+[[blueprint.customizations.ssh]]
+password-authentication = true
+key-authentication = true
+
+[[blueprint.customizations.systemd]]
+enabled = ["sshd", "cockpit.socket"]

@@ -1,0 +1,81 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+USER root
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+# Install base system packages and utilities
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    podman \
+    vim-enhanced \
+    NetworkManager-wifi \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install workstation package group
+RUN dnf \
+    groupinstall -y \
+    workstation \
+    --excludepkgs=rootfiles \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install OCP cli and packages to make install media
+RUN dnf \
+    --enablerepo=rhocp-4.18-for-rhel-9-x86_64-rpms \
+    install -y \
+    openshift-clients \
+    nmstate \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install other development tools
+RUN dnf \
+    install -y \
+    make \
+    cmake \
+    git \
+    jq \
+    rpm-build \
+    rpmdevtools \
+    buildah \
+    skopeo \
+    qemu-kvm \
+    libvirt \
+    virt-install \
+    virt-manager \
+    curl \
+    wget \
+    tree \
+    postgresql \
+    redis 
+    
+# Install rdesktop from EPEL
+RUN dnf \
+    --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms \
+    install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN dnf \
+    install -y \
+    rdesktop \
+    htop \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN dnf \
+    remove -y epel-release-latest-9 \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+CMD [ "/sbin/init" ]
