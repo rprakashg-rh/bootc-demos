@@ -24,6 +24,8 @@ push the container to registry
 podman push quay.io/rgopinat/makeiso:latest
 ```
 
+Finally create the ISO with custom kickstart by running command below
+
 ```sh
 podman run --rm \
     -v $HOME/.config/containers/auth.json:/root/.config/containers/auth.json \
