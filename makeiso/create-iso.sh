@@ -25,7 +25,7 @@ fi
 
 TEMPDIR=$(mktemp --directory)
 
-echo "Copying kickstart file to ${TEMPDIR}"
+echo "Copying kickstart file $2 to ${TEMPDIR}"
 cp "/ks/$2" "${TEMPDIR}/$2"
 
 echo "Unpacking the container image"
@@ -37,5 +37,4 @@ skopeo copy --authfile ~/.config/containers/auth.json "docker://$1" "oci:${TEMPD
 cd "${TEMPDIR}"
 mkksiso --ks $2 --add container/ \
     --cmdline "console=tty0 console=ttyS0,115200n8" \
-    --rm-args "quiet" \
     "/iso/$3" "/output/$4"

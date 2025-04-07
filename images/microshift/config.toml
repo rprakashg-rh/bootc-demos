@@ -1,0 +1,51 @@
+[customizations.installer.kickstart]
+contents = """
+%pre --log=/dev/console --erroronfail
+mkdir -p /etc/ostree
+cat > /etc/ostree/auth.json << 'EOF'
+{
+        "auths": {
+                "quay.io": {
+                        "auth": "cmdvcGluYXRAcmVkaGF0LmNvbTo0eDR2dmlGVVk3RWtwS1lzcERvTAo="
+                }
+        }
+}
+EOF
+%end
+
+lang en_US.UTF-8
+keyboard us
+
+# Timezone and NTP settings
+timezone America/Los_Angeles --utc
+
+text --non-interactive
+poweroff
+
+# Partition the disk with hardware-specific boot and swap partitions, adding an
+# LVM volume that contains a 10GB+ system root. The remainder of the volume will
+# be used by the CSI driver for storing data.
+zerombr
+clearpart --all --initlabel
+# Create boot and swap partitions as required by the current hardware platform
+reqpart --add-boot
+# Add an LVM volume group and allocate a system root logical volume
+part pv.01 --grow
+volgroup rhel pv.01
+logvol / --vgname=rhel --fstype=xfs --size=10240 --name=root
+
+# Configure network to use DHCP and activate on boot
+network --bootproto=dhcp --device=link --activate --onboot=on
+rootpw 'R3dh4t123!'
+
+%post --log=/dev/console --erroronfail
+# Create an OpenShift pull secret file
+cat > /etc/crio/openshift-pull-secret <<'EOF'
+{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfODRiYWRjNzEwYmE2NGQ2NWFjZmVkZmZkNjYyOGNjZmQ6U0Q3OEJCVDBHN05NUk9KM1MwS0gwTUY4VDZTVjhZWFlPMldQVjRZOFU5V0ZDODFNU1lLWVJPN1VXVFFQN1RLVg==","email":"rgopinat@redhat.com"},"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfODRiYWRjNzEwYmE2NGQ2NWFjZmVkZmZkNjYyOGNjZmQ6U0Q3OEJCVDBHN05NUk9KM1MwS0gwTUY4VDZTVjhZWFlPMldQVjRZOFU5V0ZDODFNU1lLWVJPN1VXVFFQN1RLVg==","email":"rgopinat@redhat.com"},"registry.connect.redhat.com":{"auth":"fHVoYy1wb29sLWZjOTNlNDc5LTUwNWItNDNlMy05YWVkLWNjYjkxNjI2ZTQ0MzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSTBObUV4WVRBMk5UVmlZVE0wWVRRNFlXRTFOakU1T1RRd1l6YzRNV0ZpT1NKOS5aUE5ZVlM0QW9lVnhoamg5YmVubTBYMThzZDRXVW00eFhHRDVBOEYzamx2c1ljWGgwYzFsbFZNZGJnOENVS2IxUmJHeGJYLWVla3RDWXZDUWxFSE56NExhcXd4WS1IVDlWWGlxeGhaQ3hlbGRwVTJPYTBRM1NwdlFmNVNnLTJYcldSbzI5RGgwZnBzQ09NRTFTTU9zSXI3T0FjUHdrVEFSd05QMzRsOG1KaVBYSVJ1RDkzWDROTzRySHlpd2xwTEQ4R0ZRVEJERXJkeHVMZXF2WWxfZHc1Ylh3T1gwUmF5TzBhcWhVSnJqRWRpQTNremhCVFo2cHZ4d0FyOTE3WC1GekZ1Z19aTUxDd19SU2pYNDJXUWNGb2RyUEhFTlBHdU5WOFB4YTU1Y09BcGJWYjI0eVoydFFyMHcwSjhuMTItREt2bTdZd25VVEhXTjdURHVleU43aTV0dC1rR01wTEFnN2RSY0xMY3ZlaHhPVzlVYVh3dm9KNFhVa2xqRlVpOFl5ZlZYYzRNaUVGcDVSREJna090aGNfUU5WYWxIMjRjbDFyaEdCZFFYd2xuZ1VNQkdKM3FWSkM1amtpd2dSSjd3cmlOQkR3V3dkVTdPYmRpWnVIdjFPa2VLSXZlZExEUUNPRTdGbXBXVkJJcDk4LTVVcGstemNNRDBfSGF5aVZIR0VIeEpWLXBvN0hKenpDNmxsUlNLN2FfSWtMMkp4RzYtZzJyUzkyUm1zcV9Ya2hSZGd4b3p2MDE1ejJWbWhTZGl2MlFlc3I1RjVxbXJzOUdRajN5NGotR3BvRnd5R1dGc2tsamxCcXNyTGNjX2tKV0dKV3RKdkRUNWc0dzRmRXNtRTlab0paaVM2TnZELURNNTFsLXVCZ0UyaUI2bGJaYU1NRzlQRk40N1gzZw==","email":"rgopinat@redhat.com"},"registry.redhat.io":{"auth":"fHVoYy1wb29sLWZjOTNlNDc5LTUwNWItNDNlMy05YWVkLWNjYjkxNjI2ZTQ0MzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSTBObUV4WVRBMk5UVmlZVE0wWVRRNFlXRTFOakU1T1RRd1l6YzRNV0ZpT1NKOS5aUE5ZVlM0QW9lVnhoamg5YmVubTBYMThzZDRXVW00eFhHRDVBOEYzamx2c1ljWGgwYzFsbFZNZGJnOENVS2IxUmJHeGJYLWVla3RDWXZDUWxFSE56NExhcXd4WS1IVDlWWGlxeGhaQ3hlbGRwVTJPYTBRM1NwdlFmNVNnLTJYcldSbzI5RGgwZnBzQ09NRTFTTU9zSXI3T0FjUHdrVEFSd05QMzRsOG1KaVBYSVJ1RDkzWDROTzRySHlpd2xwTEQ4R0ZRVEJERXJkeHVMZXF2WWxfZHc1Ylh3T1gwUmF5TzBhcWhVSnJqRWRpQTNremhCVFo2cHZ4d0FyOTE3WC1GekZ1Z19aTUxDd19SU2pYNDJXUWNGb2RyUEhFTlBHdU5WOFB4YTU1Y09BcGJWYjI0eVoydFFyMHcwSjhuMTItREt2bTdZd25VVEhXTjdURHVleU43aTV0dC1rR01wTEFnN2RSY0xMY3ZlaHhPVzlVYVh3dm9KNFhVa2xqRlVpOFl5ZlZYYzRNaUVGcDVSREJna090aGNfUU5WYWxIMjRjbDFyaEdCZFFYd2xuZ1VNQkdKM3FWSkM1amtpd2dSSjd3cmlOQkR3V3dkVTdPYmRpWnVIdjFPa2VLSXZlZExEUUNPRTdGbXBXVkJJcDk4LTVVcGstemNNRDBfSGF5aVZIR0VIeEpWLXBvN0hKenpDNmxsUlNLN2FfSWtMMkp4RzYtZzJyUzkyUm1zcV9Ya2hSZGd4b3p2MDE1ejJWbWhTZGl2MlFlc3I1RjVxbXJzOUdRajN5NGotR3BvRnd5R1dGc2tsamxCcXNyTGNjX2tKV0dKV3RKdkRUNWc0dzRmRXNtRTlab0paaVM2TnZELURNNTFsLXVCZ0UyaUI2bGJaYU1NRzlQRk40N1gzZw==","email":"rgopinat@redhat.com"}}}
+EOF
+chmod 600 /etc/crio/openshift-pull-secret
+
+bootc switch --mutate-in-place --transport registry quay.io/rgopinat/microshift-bootc:latest
+
+%end
+"""

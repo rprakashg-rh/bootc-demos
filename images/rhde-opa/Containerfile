@@ -1,0 +1,55 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+ARG ADMIN_USER=redhat
+ARG ADMIN_USER_PASSWORD=""
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
+    echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
+fi
+
+RUN mkdir -p /var/spool/mail && \
+useradd -m -d /var/home/${ADMIN_USER} ${ADMIN_USER} && \
+echo "redhat:${ADMIN_USER_PASSWORD}" | chpasswd
+
+# Install base packages
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    firewalld \
+    nmstate \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN mkdir -p /etc/containers/systemd/opa.service.d && \
+    mkdir -p /etc/opa/policies
+
+
+RUN cat > /etc/containers/systemd/opa.service.d/opa-server.container <<'EOF'
+[Unit]
+Description=Open Policy Agent Server
+After=network-online.target
+
+[Container]
+Image=openpolicyagent/opa
+Exec=run --server --addr=0.0.0.0:8181 /policies
+ContainerName=opa-server
+PublishPort=8181:8181
+Pull=never
+Volume=/etc/opa/policies:/policies:ro
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+CMD [ "/sbin/init" ]
+    

@@ -1,0 +1,63 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+ARG USHIFT_VER=4.17
+ARG ADMIN_USER=redhat
+ARG ADMIN_USER_PASSWORD=""
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+# Install base packages
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    firewalld \
+    nmstate \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install microshift
+RUN dnf \
+    --enablerepo=rhocp-${USHIFT_VER}-for-rhel-9-$(uname -m)-rpms \
+    --enablerepo=fast-datapath-for-rhel-9-$(uname -m)-rpms \
+    install -y \
+    microshift \
+    openshift-clients \
+    && systemctl enable microshift \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
+        echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
+    fi
+
+RUN mkdir -p /var/spool/mail && \
+    useradd -m -d /var/home/${ADMIN_USER} ${ADMIN_USER} && \
+    echo "redhat:${ADMIN_USER_PASSWORD}" | chpasswd
+
+# Configure firewall
+RUN firewall-offline-cmd --zone=public --add-port=22/tcp && \
+    firewall-offline-cmd --zone=trusted --add-source=10.42.0.0/16 && \
+    firewall-offline-cmd --zone=trusted --add-source=169.254.169.1
+
+RUN cat > /etc/systemd/system/microshift-make-rshared.service <<'EOF'
+[Unit]
+Description=Make root filesystem shared
+Before=microshift.service
+ConditionVirtualization=container
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mount --make-rshared /
+[Install]
+WantedBy=multi-user.target
+EOF
+
+RUN systemctl enable microshift-make-rshared.service
+
+CMD [ "/sbin/init" ]
