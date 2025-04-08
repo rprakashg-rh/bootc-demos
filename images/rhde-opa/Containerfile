@@ -32,24 +32,11 @@ RUN dnf \
 RUN mkdir -p /etc/containers/systemd/opa.service.d && \
     mkdir -p /etc/opa/policies
 
+# Copy systemd unit
+COPY etc/containers/systemd/opa.service.d/opa-server.container /etc/containers/systemd/opa.service.d/opa-server.container
 
-RUN cat > /etc/containers/systemd/opa.service.d/opa-server.container <<'EOF'
-[Unit]
-Description=Open Policy Agent Server
-After=network-online.target
-
-[Container]
-Image=openpolicyagent/opa
-Exec=run --server --addr=0.0.0.0:8181 /policies
-ContainerName=opa-server
-PublishPort=8181:8181
-Pull=never
-Volume=/etc/opa/policies:/policies:ro
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
+# Copy default policies
+COPY etc/opa/policies /etc/opa/policies
 
 CMD [ "/sbin/init" ]
     
