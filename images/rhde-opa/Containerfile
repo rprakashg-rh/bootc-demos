@@ -15,28 +15,45 @@ RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
     echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
 fi
 
-RUN mkdir -p /var/spool/mail && \
-useradd -m -d /var/home/${ADMIN_USER} ${ADMIN_USER} && \
-echo "redhat:${ADMIN_USER_PASSWORD}" | chpasswd
-
 # Install base packages
 RUN dnf \
     --enablerepo=rhel-9-for-x86_64-baseos-rpms \
     --enablerepo=rhel-9-for-x86_64-appstream-rpms \
     install -y \
+    podman \
     firewalld \
     nmstate \
+    mkpasswd \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-RUN mkdir -p /etc/containers/systemd/opa.service.d && \
-    mkdir -p /etc/opa/policies
+RUN dnf \
+    remove -y epel-release-latest-9 \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-# Copy systemd unit
-COPY etc/containers/systemd/opa.service.d/opa-server.container /etc/containers/systemd/opa.service.d/opa-server.container
+RUN pass=$(mkpasswd --method=SHA-512 --rounds=4096 $ADMIN_USER_PASSWORD) && \
+    useradd -m -G wheel $ADMIN_USER -p $pass
+
+RUN echo "%wheel        ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/freewheelers
+
+RUN mkdir -p /etc/opa/policies
+
+# Copy the quadlet file
+COPY etc/containers/systemd/opa-server.container /etc/containers/systemd/opa-server.container
 
 # Copy default policies
 COPY etc/opa/policies /etc/opa/policies
+
+RUN /usr/libexec/podman/quadlet --dryrun
+    
+# Copy the pam opa validation script
+COPY scripts/ /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/pam_opa_validation.sh && \
+    chmod +x /usr/local/bin/update_pam_config.sh
+
+RUN /usr/local/bin/update_pam_config.sh
 
 CMD [ "/sbin/init" ]
     

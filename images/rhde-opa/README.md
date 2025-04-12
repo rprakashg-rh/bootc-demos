@@ -18,3 +18,10 @@ sudo podman build \
     --build-arg=ADMIN_USER_PASSWORD=${ADMIN_USER_PASSWORD} \
     -f Containerfile .
 ```
+
+Testing the bootc image
+
+```sh
+podman run -v /var/lib/containers/storage:/var/lib/containers/storage --rm -it --name rhde-opa --hostname rhde-opa -p 2022:22 quay.io/rgopinat/rhde-opa:1.0
+```
+

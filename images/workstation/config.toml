@@ -4,4 +4,4 @@ password-authentication = true
 key-authentication = true
 
 [[blueprint.customizations.systemd]]
-enabled = ["sshd", "cockpit.socket"]
+enabled = ["sshd"]

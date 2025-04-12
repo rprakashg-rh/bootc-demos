@@ -3,8 +3,6 @@
 # podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
-USER root
-
 COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
 RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
     chmod 0600 /usr/lib/container-auth.json && \
@@ -18,14 +16,28 @@ RUN dnf \
     podman \
     vim-enhanced \
     NetworkManager-wifi \
+    git \
+    buildah \
+    skopeo \
+    lorax \
+    ansible-core \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
 # Install workstation package group
 RUN dnf \
-    groupinstall -y \
-    workstation \
-    --excludepkgs=rootfiles \
+--enablerepo=rhel-9-for-x86_64-baseos-rpms \
+--enablerepo=rhel-9-for-x86_64-appstream-rpms \
+groupinstall -y \
+workstation \
+--excludepkgs=rootfiles \
+&& dnf clean all \
+&& rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Install EPEL
+RUN dnf \
+    --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms \
+    install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
@@ -38,34 +50,8 @@ RUN dnf \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-# Install other development tools
-RUN dnf \
-    install -y \
-    make \
-    cmake \
-    git \
-    jq \
-    rpm-build \
-    rpmdevtools \
-    buildah \
-    skopeo \
-    qemu-kvm \
-    libvirt \
-    virt-install \
-    virt-manager \
-    curl \
-    wget \
-    tree \
-    postgresql \
-    redis 
     
 # Install rdesktop from EPEL
-RUN dnf \
-    --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms \
-    install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
-    && dnf clean all \
-    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
-
 RUN dnf \
     install -y \
     rdesktop \
@@ -77,5 +63,15 @@ RUN dnf \
     remove -y epel-release-latest-9 \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN systemctl set-default graphical.target
+
+# Resize windows on super+mouse-right-click
+RUN gsettings set org.gnome.desktop.wm.preferences resize-with-right-button "true"
+
+# Install all RPMs in ./additional_rpms
+RUN --mount=type=bind,source=./additional_rpms,target=/additional_rpms,Z \
+	dnf -y --disablerepo='*' install --skip-unavailable /additional_rpms/*.rpm \
+	; dnf -y clean all
 
 CMD [ "/sbin/init" ]

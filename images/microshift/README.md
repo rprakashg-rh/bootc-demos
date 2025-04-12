@@ -40,7 +40,7 @@ sudo podman run \
 --authfile=$PULL_SECRET \
 --rm \
 --privileged \
---pull=newer \
+--pull-newer \
 --security-opt label=type:unconfined_t \
 -v $PWD/images/microshift/config.toml:/config.toml:ro \
 -v $PWD/output:/output \
@@ -72,7 +72,7 @@ Create VMImport Service Roles
 
 ```sh
 aws iam create-role \
-  --role-name=vmimport_service_role \
+  --role-name=vmimport \
   --assume-role-policy-document='{
     "Version": "2012-10-17",
     "Statement": [
@@ -92,6 +92,7 @@ aws iam create-role \
 --query='Role.Arn' \
 --output=text | pbcopy
 ```
+Role Arn: `arn:aws:iam::695524278079:role/vmimport`
 
 Create role policy
 
@@ -109,8 +110,8 @@ aws iam create-policy \
                     "s3:PutObject"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::${AMI_BUCKET}",
-                    "arn:aws:s3:::${AMI_BUCKET}/*"
+                    "arn:aws:s3:::bootc-amis",
+                    "arn:aws:s3:::bootc-amis/*"
                 ]
             },
             {
@@ -123,8 +124,8 @@ aws iam create-policy \
                     "s3:GetBucketAcl"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::${AMI_BUCKET}",
-                    "arn:aws:s3:::${AMI_BUCKET}/*"
+                    "arn:aws:s3:::bootc-amis",
+                    "arn:aws:s3:::bootc-amis/*"
                 ]
             },
             {
@@ -146,7 +147,7 @@ Attach the Policy to Role
 
 ```sh
 aws iam attach-role-policy \
-  --role-name=vmimport_service_role \
+  --role-name=vmimport \
   --policy-arn=arn:aws:iam::695524278079:policy/vmimport_service_role_policy
 ```
 
@@ -179,7 +180,7 @@ sudo podman run \
 --env AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} \
 --env AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID} \
 -v /var/lib/containers/storage:/var/lib/containers/storage \
-quay.io/centos-bootc/bootc-image-builder:latest \
+registry.redhat.io/rhel9/bootc-image-builder:latest \
 --type ami \
 --aws-ami-name microshift-bootc-x86_64 \
 --aws-bucket ${AMI_BUCKET} \
