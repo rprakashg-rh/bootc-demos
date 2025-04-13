@@ -1,0 +1,46 @@
+[customizations.installer.kickstart]
+contents = """
+%pre --log=/dev/console --erroronfail
+mkdir -p /etc/ostree
+cat > /etc/ostree/auth.json << 'EOF'
+{
+        "auths": {
+                "quay.io": {
+                        "auth": "cmdvcGluYXRAcmVkaGF0LmNvbTo0eDR2dmlGVVk3RWtwS1lzcERvTAo="
+                }
+        }
+}
+EOF
+%end
+
+lang en_US.UTF-8
+keyboard us
+
+# Timezone and NTP settings
+timezone America/Los_Angeles --utc
+
+text --non-interactive
+poweroff
+
+# Partition the disk with hardware-specific boot and swap partitions, adding an
+# LVM volume that contains a 10GB+ system root. The remainder of the volume will
+# be used by the CSI driver for storing data.
+zerombr
+clearpart --all --initlabel
+# Create boot and swap partitions as required by the current hardware platform
+reqpart --add-boot
+# Add an LVM volume group and allocate a system root logical volume
+part pv.01 --grow
+volgroup rhel pv.01
+logvol / --vgname=rhel --fstype=xfs --size=10240 --name=root
+
+# Configure network to use DHCP and activate on boot
+network --bootproto=dhcp --device=link --activate --onboot=on
+rootpw 'R3dh4t123!'
+
+%post --log=/dev/console --erroronfail
+
+bootc switch --mutate-in-place --transport registry quay.io/rgopinat/rhde-opa:latest
+
+%end
+"""

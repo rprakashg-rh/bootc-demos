@@ -4,23 +4,12 @@ Microshift bootc demo
 ## Build Image
 Follow these steps to build microshift bootc images
 
-Set some environment variables
-
-```sh
-export IMAGE_NAME=microshift-bootc
-export TAG=1.0
-export REGISTRY=quay.io
-export REGISTRY_USER=rgopinat
-export ADMIN_USER_PASSWORD=<redacted>
-export PULL_SECRET=$HOME/rhpullsecret/pull-secret.txt
-```
-
 Build the image
 ```sh
 cd images/microshift
-sudo podman build \
+podman build \
     --secret id=creds,src=$HOME/.config/containers/auth.json \
-    --authfile=$PULL_SECRET -t "$REGISTRY/$REGISTRY_USER/$IMAGE_NAME:$TAG" \
+    --authfile=$PULL_SECRET -t "$REGISTRY/$REGISTRY_USER/microshift-bootc" \
     --build-arg=ADMIN_USER_PASSWORD=$ADMIN_USER_PASSWORD \
     -f Containerfile .
 ```
@@ -28,19 +17,17 @@ sudo podman build \
 Push the image to registry
 
 ```sh
-sudo podman push "$REGISTRY/$REGISTRY_USER/$IMAGE_NAME:$TAG"
+podman push "$REGISTRY/$REGISTRY_USER/microshift-bootc"
 ```
 
 ## Building anaconda iso
 
 ```sh
-sudo podman pull "$REGISTRY/$REGISTRY_USER/$IMAGE_NAME:$TAG"
-
-sudo podman run \
+podman run \
 --authfile=$PULL_SECRET \
 --rm \
 --privileged \
---pull-newer \
+--pull=newer \
 --security-opt label=type:unconfined_t \
 -v $PWD/images/microshift/config.toml:/config.toml:ro \
 -v $PWD/output:/output \
@@ -48,23 +35,19 @@ sudo podman run \
 quay.io/centos-bootc/bootc-image-builder:latest \
 --type anaconda-iso \
 --config /config.toml \
-"$REGISTRY/$REGISTRY_USER/$IMAGE_NAME:$TAG"
+"$REGISTRY/$REGISTRY_USER/microshift-bootc"
 ```
 ## Building AMI image for AWS
 Follow steps in this section to build an AMI image for running virtualized devices on AWS
 
 Set some environment variables
 
-```sh
-export AWS_IMAGE_NAME=microshift-bootc-aws
-export AMI_BUCKET=bootc-amis
-```
 
 Create an S3 bucket to store AMI artifacts
 
 ```sh
 aws s3api create-bucket \
-    --bucket=${AMI_BUCKET} \
+    --bucket=bootc-amis \
     --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION
 ```
 
@@ -154,26 +137,25 @@ aws iam attach-role-policy \
 Overlay base microshift image image with cloud-init
 
 ```sh
-sudo podman build \
-    --build-arg="FROM=quay.io/rgopinat/microshift-bootc:1.0" \
-    -t "$REGISTRY/$REGISTRY_USER/$AWS_IMAGE_NAME:$TAG" \
+podman build \
+    --build-arg="FROM=$REGISTRY/$REGISTRY_USER/microshift-bootc" \
+    -t "$REGISTRY/$REGISTRY_USER/microshift-bootc-aws" \
     -f Containerfile .
 ```
 
 Push to registry
 
 ```sh
-podman push "$REGISTRY/$REGISTRY_USER/$AWS_IMAGE_NAME:$TAG"
+podman push "$REGISTRY/$REGISTRY_USER/microshift-bootc-aws"
 ```
 
-Build AMI using bootc image builder
+Pull the images before running. Seems like Bib has some issues as it doesn't use the authfile Build AMI using bootc image builder
 
 ```sh
 sudo podman run \
 --authfile=$PULL_SECRET \
 --rm \
 --privileged \
---pull=newer \
 --security-opt label=type:unconfined_t \
 --env AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 --env AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
@@ -181,10 +163,11 @@ sudo podman run \
 --env AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID} \
 -v /var/lib/containers/storage:/var/lib/containers/storage \
 registry.redhat.io/rhel9/bootc-image-builder:latest \
+--local \
 --type ami \
 --aws-ami-name microshift-bootc-x86_64 \
---aws-bucket ${AMI_BUCKET} \
+--aws-bucket bootc-amis \
 --aws-region us-west-2 \
-"$REGISTRY/$REGISTRY_USER/$AWS_IMAGE_NAME:$TAG"
+"$REGISTRY/$REGISTRY_USER/microshift-bootc-aws"
 ```
 

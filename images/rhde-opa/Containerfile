@@ -6,6 +6,8 @@ FROM registry.redhat.io/rhel9/rhel-bootc:latest
 ARG ADMIN_USER=redhat
 ARG ADMIN_USER_PASSWORD=""
 
+USER root
+
 COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
 RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
     chmod 0600 /usr/lib/container-auth.json && \
@@ -21,14 +23,8 @@ RUN dnf \
     --enablerepo=rhel-9-for-x86_64-appstream-rpms \
     install -y \
     podman \
-    firewalld \
-    nmstate \
+    tmux \
     mkpasswd \
-    && dnf clean all \
-    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
-
-RUN dnf \
-    remove -y epel-release-latest-9 \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 

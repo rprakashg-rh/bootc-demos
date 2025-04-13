@@ -2,11 +2,11 @@ module "bootc-vm" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "2.8.0"
 
-  name                          = "bootc-msi-demo"
+  name                          = "bootc-vm"
   instance_count                = 1
 
-  instance_type                 = "t2.medium"
-  ami                           = "ami-01bd934dac221c45b"
+  instance_type                 = "t2.xlarge"
+  ami                           = "ami-0e62016323e71b4bf"
   subnet_id                     = tolist(module.vpc.public_subnets)[0]
   key_name                      = var.config.ssh_key
   vpc_security_group_ids        = [module.public_subnet_sg.security_group_id]

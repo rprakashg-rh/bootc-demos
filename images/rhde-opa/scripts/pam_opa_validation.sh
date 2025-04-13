@@ -7,7 +7,7 @@ set -e
 GROUPS=$(id -nG "$PAM_USER" | tr ' ' ',')
 
 USER="$PAM_USER"
-OPA_URL="http://localhost:8181/v1/data/authz/allow"
+OPA_URL="http://localhost:8181/v1/data/access.policy/allow"
 
 response=$(curl -s -X POST -H "Content-Type: application/json" \
   --data "{\"input\": {\"user\": \"$PAM_USER\", \"groups\": [\"${GROUPS//,/\",\"}\"]}}" $OPA_URL)
