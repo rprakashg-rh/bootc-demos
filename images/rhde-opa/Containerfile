@@ -56,7 +56,7 @@ COPY scripts/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/pam_opa_validation.sh && \
     chmod +x /usr/local/bin/update_pam_config.sh
 
-# RUN /usr/local/bin/update_pam_config.sh
+RUN /usr/local/bin/update_pam_config.sh
 
 CMD [ "/sbin/init" ]
     
