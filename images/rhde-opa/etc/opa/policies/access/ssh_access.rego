@@ -1,25 +1,37 @@
 package access.policy
 
-default allow = false
+default allow := false
+
+# Define start and end time in "HH:MM" 24-hour format
+start := 9
+end := 17
+
+get_time = {"hour": hour, "minute": minute} if {
+    t := time.now_ns()
+    ts := time.clock([t, "America/Los_Angeles"])
+    hour := ts[0]
+    minute := ts[1]
+}
 
 # Only these groups are allowed login
-allowed_groups = {
-  "wheel",
-  "ops"
+allowed_groups := {
+	"wheel",
+	"ops",
 }
 
-# Time-based access window
-within_business_hours {
-  t := time.now_ns() / 1000000000
-  hour := time.hour(t)
-  hour >= 9
-  hour < 17
+allow if {
+	user := input.user
+    user == "admin"
 }
 
-allow {
-  # get the groups the user is member of
-  some g
-  g := input.groups[_]
-  allowed_groups[g]
-  within_business_hours
+allow if {
+	some group
+
+	groups := split(input.groups, ",")
+	group = groups[_]
+	group == allowed_groups[_]
+    
+    t := get_time
+    t.hour >= start
+    t.hour <= end
 }

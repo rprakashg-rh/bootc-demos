@@ -3,19 +3,12 @@
 # podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
-ARG ADMIN_USER=redhat
-ARG ADMIN_USER_PASSWORD=""
-
 USER root
 
 COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
 RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
     chmod 0600 /usr/lib/container-auth.json && \
     ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
-
-RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
-    echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
-fi
 
 # Install base packages
 RUN dnf \
@@ -28,8 +21,12 @@ RUN dnf \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-RUN pass=$(mkpasswd --method=SHA-512 --rounds=4096 $ADMIN_USER_PASSWORD) && \
-    useradd -m -G wheel $ADMIN_USER -p $pass
+RUN pass=$(mkpasswd --method=SHA-512 --rounds=4096 redhat) && \
+    groupadd ops && \
+    groupadd developers && \
+    useradd -m -G wheel admin -p $pass && \
+    useradd -m -G ops devops1 -p $pass && \
+    useradd -m -G developers dev1 -p $pass  
 
 RUN echo "%wheel        ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/freewheelers
 
@@ -49,7 +46,7 @@ COPY scripts/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/pam_opa_validation.sh && \
     chmod +x /usr/local/bin/update_pam_config.sh
 
-RUN /usr/local/bin/update_pam_config.sh
+# RUN /usr/local/bin/update_pam_config.sh
 
 CMD [ "/sbin/init" ]
     

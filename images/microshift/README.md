@@ -22,6 +22,8 @@ podman push "$REGISTRY/$REGISTRY_USER/microshift-bootc"
 
 ## Building anaconda iso
 
+Build anaconda installer iso
+
 ```sh
 podman run \
 --authfile=$PULL_SECRET \
@@ -35,7 +37,7 @@ podman run \
 quay.io/centos-bootc/bootc-image-builder:latest \
 --type anaconda-iso \
 --config /config.toml \
-"$REGISTRY/$REGISTRY_USER/microshift-bootc"
+$REGISTRY/$REGISTRY_USER/microshift-bootc
 ```
 ## Building AMI image for AWS
 Follow steps in this section to build an AMI image for running virtualized devices on AWS
@@ -134,20 +136,6 @@ aws iam attach-role-policy \
   --policy-arn=arn:aws:iam::695524278079:policy/vmimport_service_role_policy
 ```
 
-Overlay base microshift image image with cloud-init
-
-```sh
-podman build \
-    --build-arg="FROM=$REGISTRY/$REGISTRY_USER/microshift-bootc" \
-    -t "$REGISTRY/$REGISTRY_USER/microshift-bootc-aws" \
-    -f Containerfile .
-```
-
-Push to registry
-
-```sh
-podman push "$REGISTRY/$REGISTRY_USER/microshift-bootc-aws"
-```
 
 Pull the images before running. Seems like Bib has some issues as it doesn't use the authfile Build AMI using bootc image builder
 
@@ -168,6 +156,6 @@ registry.redhat.io/rhel9/bootc-image-builder:latest \
 --aws-ami-name microshift-bootc-x86_64 \
 --aws-bucket bootc-amis \
 --aws-region us-west-2 \
-"$REGISTRY/$REGISTRY_USER/microshift-bootc-aws"
+$REGISTRY/$REGISTRY_USER/microshift-bootc
 ```
 

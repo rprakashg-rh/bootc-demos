@@ -4,7 +4,7 @@ After=network-online.target
 
 [Container]
 Image=docker.io/openpolicyagent/opa
-Exec=run --server --addr=127.0.0.1:8181 --log-level=info -d /policies
+Exec=run --server --log-level=info /policies
 ContainerName=opa
 PublishPort=8181:8181
 Pull=always

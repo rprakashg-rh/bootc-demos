@@ -6,7 +6,7 @@ module "bootc-vm" {
   instance_count                = 1
 
   instance_type                 = "t2.xlarge"
-  ami                           = "ami-0e62016323e71b4bf"
+  ami                           = "ami-0e2d7de5b1ede8f57"
   subnet_id                     = tolist(module.vpc.public_subnets)[0]
   key_name                      = var.config.ssh_key
   vpc_security_group_ids        = [module.public_subnet_sg.security_group_id]
