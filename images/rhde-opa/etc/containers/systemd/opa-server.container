@@ -4,11 +4,12 @@ After=network-online.target
 
 [Container]
 Image=docker.io/openpolicyagent/opa
-Exec=run --server --log-level=info /policies
+Exec=run --server --log-level=info --addr=0.0.0.0:8181
 ContainerName=opa
 PublishPort=8181:8181
 Pull=always
 Volume=/etc/opa/policies:/policies:rw,Z
+WorkingDir=/policies
 
 [Install]
 WantedBy=multi-user.target
