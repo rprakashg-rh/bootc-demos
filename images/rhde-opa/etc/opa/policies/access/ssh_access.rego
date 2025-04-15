@@ -1,4 +1,4 @@
-package access.policy
+package access
 
 default allow := false
 
