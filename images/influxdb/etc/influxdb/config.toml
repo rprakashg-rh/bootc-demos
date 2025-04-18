@@ -1,0 +1,41 @@
+# InfluxDB 2.x Configuration - Demo purposes
+
+[meta]
+  dir = "/var/lib/influxdb2/meta"
+
+[data]
+  engine-path = "/var/lib/influxdb2/engine"
+  wal-dir = "/var/lib/influxdb2/wal"
+  query-concurrency = 10
+  query-queue-size = 1000
+  max-concurrent-compactions = 3
+
+[http]
+  bind-address = ":8086"
+  read-timeout = "10s"
+  write-timeout = "10s"
+  idle-timeout = "30s"
+  auth-enabled = false
+  log-enabled = true
+  pprof-enabled = true
+  flux-log-enabled = true
+  access-log-path = "/var/log/influxdb2/access.log"
+  error-log-path = "/var/log/influxdb2/error.log"
+
+[logging]
+  level = "debug"
+
+[storage]
+  data-dir = "/var/lib/influxdb2/engine/data"
+  wal-dir = "/var/lib/influxdb2/engine/wal"
+  compact-full-write-cold-duration = "4h"
+
+[monitor]
+  store-enabled = true
+  store-database = "_internal"
+
+[ui]
+  enabled = true
+
+[flux]
+  enabled = true

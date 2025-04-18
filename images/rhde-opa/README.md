@@ -81,7 +81,7 @@ registry.redhat.io/rhel9/bootc-image-builder:latest \
 --aws-ami-name rhde-opa-x86_64 \
 --aws-bucket bootc-amis \
 --aws-region us-west-2 \
-$REGISTRY/$REGISTRY_USER/rhde-opa
+$REGISTRY/$REGISTRY_USER/rhde-opa:aws
 ```
 
 

@@ -1,0 +1,54 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+ARG CLI_VERSION=2.7.5
+ARG ADMIN_USER=dbadmin
+ARG ADMIN_USER_PASSWORD=""
+
+USER root
+
+RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
+        echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
+    fi
+
+COPY etc/yum.repos.d/influxdata.repo /etc/yum.repos.d/
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    tmux \
+    mkpasswd \
+    wget \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+RUN pass=$(mkpasswd --method=SHA-512 --rounds=4096 $ADMIN_USER_PASSWORD) && \
+    useradd -m -G wheel $ADMIN_USER -p $pass
+
+# Download the key to verify the downloads from influxdata repo
+RUN curl --silent --location -O \
+    https://repos.influxdata.com/influxdata-archive.key \
+    && echo "943666881a1b8d9b849b74caebf02d3465d6beb716510d86a39f6c8e8dac7515  influxdata-archive.key" \
+    | sha256sum --check - && cat influxdata-archive.key \
+    | gpg --dearmor \
+    | tee /etc/pki/rpm-gpg/RPM-GPG-KEY-influxdata > /dev/null
+
+RUN yum install -y \
+    influxdb2
+
+RUN systemctl enable influxdb.service
+
+# Download Influx CLI
+RUN wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-$CLI_VERSION-linux-amd64.tar.gz \
+    && tar xvzf ./influxdb2-client-2.7.5-linux-amd64.tar.gz \
+    &&  cp ./influx /usr/local/bin/
+
+CMD [ "/sbin/init" ]

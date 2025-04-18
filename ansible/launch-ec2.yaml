@@ -1,0 +1,30 @@
+- name: Launch ec2 instance
+  hosts: localhost
+  gather_facts: yes
+  vars:
+    ami: ami-0bbf4a3488da54cab
+    instance_name: "influxnode"
+    instance_type: t2.xlarge
+    key_name: ec2
+    subnet_id: subnet-0a2fad98a45b3bbcd
+    security_group_id: sg-002e848c38e0a8b7d 
+  tasks:
+  - name: load secrets 
+    ansible.builtin.include_vars:
+      file: "./vars/secrets.yml"
+  - name: Launch ec2 instance
+    amazon.aws.ec2_instance:
+      name: "{{ instance_name }}"
+      instance_type: "{{ instance_type }}"
+      key_name: "{{ key_name }}"
+      image_id: "{{ ami }}"
+      subnet_id: "{{ subnet_id }}"
+      security_group: "{{ security_group_id }}"
+      network_interfaces:
+      - assign_public_ip: true
+      wait: true
+      count: 1
+      user_data: "{{ lookup('ansible.builtin.template', './templates/user-data.yaml.j2') }}"
+      tags:
+        Name: "{{ instance_name }}"
+    register: ec2_instance
