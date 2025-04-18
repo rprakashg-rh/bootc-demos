@@ -44,6 +44,9 @@ RUN curl --silent --location -O \
 RUN yum install -y \
     influxdb2
 
+# Copy config file
+COPY etc/influxdb/config.toml /etc/influxdb/config.toml
+
 RUN systemctl enable influxdb.service
 
 # Download Influx CLI
@@ -52,3 +55,5 @@ RUN wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-$CLI_VERSI
     &&  cp ./influx /usr/local/bin/
 
 CMD [ "/sbin/init" ]
+
+EXPOSE 8086

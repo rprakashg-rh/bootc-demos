@@ -1,0 +1,10 @@
+ami: ami-0bbf4a3488da54cab
+instance_name: "influxnode"
+instance_type: t2.xlarge
+key_name: ec2
+subnet_id: subnet-0a2fad98a45b3bbcd
+security_group_id: sg-002e848c38e0a8b7d
+org_name: redhat
+bucket_name: vpac_metrics
+commands:
+- influx --username "{{ admin_user }}" --password "{{ admin_user_password }}" --org "{{ org_name }}" --bucket "{{ bucket_name }}"
