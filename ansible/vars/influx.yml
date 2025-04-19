@@ -1,9 +1,9 @@
-ami: ami-0bbf4a3488da54cab
+ami: ami-05883107a9a959755
 instance_name: "influxnode"
 instance_type: t2.xlarge
 key_name: ec2
-subnet_id: subnet-0a2fad98a45b3bbcd
-security_group_id: sg-002e848c38e0a8b7d
+subnet_id: subnet-0c4a1007f1a6e0533
+security_group_id: sg-00ec1e69e639c86ce
 org_name: redhat
 bucket_name: vpac_metrics
 commands:

@@ -9,6 +9,6 @@ users:
 
 runcmd:
   - echo "Welcome to RHEL Image Mode!" > /etc/motd
-  {% for command in commands %}
-  - "{{ command }}"
-  {% endfor %}
+{% for command in commands %}
+  - {{ command }}
+{% endfor %}

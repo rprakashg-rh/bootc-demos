@@ -37,6 +37,12 @@ podman build \
     -f Containerfile .
 ```
 
+Push to registry
+
+```sh
+podman push $REGISTRY/$REGISTRY_USER/influxdb-bootc:aws
+```
+
 Build AMI using BiB
 
 ```sh
@@ -62,5 +68,5 @@ sudo podman run \
 Launch an EC2 instance
 
 ```sh
-ansible-playbook --vault-password-file <(echo "$VAULT_SECRET") launch-ec2.yaml
+ansible-playbook --vault-password-file <(echo "$VAULT_SECRET") launch-ec2.yaml -e @vars/influx.yml
 ```
