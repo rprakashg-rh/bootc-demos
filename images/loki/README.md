@@ -1,48 +1,39 @@
-# influxdb
-
-Build the image
+# Grafana loki
+RHEL image mode image for running Grafana loki 
 
 ```sh
+cd images/loki
+
 podman build --secret id=creds,src=$HOME/.config/containers/auth.json \
      --authfile=$PULL_SECRET \
-     -t "$REGISTRY/$REGISTRY_USER/influxdb-bootc" \
+     -t "$REGISTRY/$REGISTRY_USER/loki-bootc" \
      -f Containerfile .
 ```
 
-Testing the container
+Push the image to registry
 
 ```sh
-podman run \
-    -v /var/lib/containers/storage:/var/lib/containers/storage \
-    --rm \
-    -it \
-    --name influxdb-bootc --hostname influxdb-bootc -p 2022:22 $REGISTRY/$REGISTRY_USER/influxdb-bootc
+podman push "$REGISTRY/$REGISTRY_USER/loki-bootc"
 ```
 
-Push to registry
-
-```sh
-podman push "$REGISTRY/$REGISTRY_USER/influxdb-bootc" 
-```
-
-Overlay cloud-init to base image
+Overlay cloud-init and tag the image with `aws`
 
 ```sh
 cd ../cloud-init
 
 podman build \
-    --build-arg=FROM=$REGISTRY/$REGISTRY_USER/influxdb-bootc \
-    -t $REGISTRY/$REGISTRY_USER/influxdb-bootc:aws \
+    --build-arg=FROM=$REGISTRY/$REGISTRY_USER/loki-bootc \
+    -t $REGISTRY/$REGISTRY_USER/loki-bootc:aws \
     -f Containerfile .
 ```
 
-Push to registry
+Push the image to registry
 
 ```sh
-podman push $REGISTRY/$REGISTRY_USER/influxdb-bootc:aws
+podman push $REGISTRY/$REGISTRY_USER/loki-bootc:aws
 ```
 
-Build AMI using BiB
+Build the AMI using BiB
 
 ```sh
 sudo podman run \
@@ -58,14 +49,14 @@ sudo podman run \
     registry.redhat.io/rhel9/bootc-image-builder:latest \
     --local \
     --type ami \
-    --aws-ami-name influxdb-x86_64 \
+    --aws-ami-name loki-x86_64 \
     --aws-bucket bootc-amis \
     --aws-region us-west-2 \
-    $REGISTRY/$REGISTRY_USER/influxdb-bootc:aws
+    $REGISTRY/$REGISTRY_USER/loki-bootc:aws
 ```
 
 Launch an EC2 instance
 
 ```sh
-ansible-playbook --vault-password-file <(echo "$VAULT_SECRET") launch-ec2.yaml -e @vars/influx.yml
+ansible-playbook --vault-password-file <(echo "$VAULT_SECRET") launch-ec2.yaml -e @vars/loki.yml
 ```

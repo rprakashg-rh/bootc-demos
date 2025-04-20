@@ -1,9 +1,7 @@
 ami: ami-07d3429d31d3dbe89
-instance_name: "influxnode"
+instance_name: "grafanaloki"
 instance_type: t2.xlarge
 key_name: ec2
 subnet_id: subnet-0c4a1007f1a6e0533
 security_group_id: sg-00ec1e69e639c86ce
-org_name: redhat
-bucket_name: vpac_metrics
 commands: []

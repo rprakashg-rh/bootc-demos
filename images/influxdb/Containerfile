@@ -4,14 +4,8 @@
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
 ARG CLI_VERSION=2.7.5
-ARG ADMIN_USER=dbadmin
-ARG ADMIN_USER_PASSWORD=""
 
 USER root
-
-RUN if [ -z "${ADMIN_USER_PASSWORD}" ] ; then \
-        echo ADMIN_USER_PASSWORD is a mandatory build argument && exit 1 ; \
-    fi
 
 COPY etc/yum.repos.d/influxdata.repo /etc/yum.repos.d/
 
@@ -30,9 +24,6 @@ RUN dnf \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-RUN pass=$(mkpasswd --method=SHA-512 --rounds=4096 $ADMIN_USER_PASSWORD) && \
-    useradd -m -G wheel $ADMIN_USER -p $pass
-
 # Download the key to verify the downloads from influxdata repo
 RUN curl --silent --location -O \
     https://repos.influxdata.com/influxdata-archive.key \
@@ -42,7 +33,9 @@ RUN curl --silent --location -O \
     | tee /etc/pki/rpm-gpg/RPM-GPG-KEY-influxdata > /dev/null
 
 RUN yum install -y \
-    influxdb2
+    influxdb2 \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
 RUN systemctl enable influxdb.service
 

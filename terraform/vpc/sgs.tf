@@ -16,6 +16,27 @@ module "public_subnet_sg" {
             description = "SSH Traffic from this machine"
             cidr_blocks = var.my_ip
         },
+        {
+            from_port = 8086
+            to_port   = 8086
+            protocol  = "tcp"
+            description = "InfluxDB"
+            cidr_blocks = var.my_ip
+        },
+        {
+            from_port = 3000
+            to_port   = 3000
+            protocol  = "tcp"
+            description = "Grafana Server"
+            cidr_blocks = var.my_ip
+        },
+        {
+            from_port = 3100
+            to_port   = 3100
+            protocol  = "tcp"
+            description = "Loki"
+            cidr_blocks = var.my_ip
+        },
     ]
 
     #allow all outbound https traffic to internet

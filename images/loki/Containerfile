@@ -1,0 +1,79 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+USER root
+
+ARG LOKI_VERSION
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+# install base packages
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    tmux \
+    mkpasswd \
+    wget \
+    unzip \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Create a user for loki
+RUN useradd --no-create-home --shell /bin/false loki
+
+# Download LOKI
+RUN export LOKI_VERSION=$(curl -s https://api.github.com/repos/grafana/loki/releases/latest | grep tag_name | cut -d '"' -f 4) \
+    && wget https://github.com/grafana/loki/releases/download/${LOKI_VERSION}/loki-linux-amd64.zip \
+    && unzip loki-linux-amd64.zip \
+    && chmod +x loki-linux-amd64 \
+    && mv loki-linux-amd64 /usr/local/bin/loki
+
+# Make config and data directories
+RUN mkdir -p /etc/loki /var/lib/loki \
+    chown loki:loki /var/lib/loki
+
+# Download default config file, if requires in future could download and customize and COPY into container
+RUN wget https://raw.githubusercontent.com/grafana/loki/refs/heads/main/cmd/loki/loki-local-config.yaml -O /etc/loki/loki-config.yaml \
+    && chown loki:loki /etc/loki/loki-config.yaml
+
+# Copy the systemd unit file
+COPY etc/systemd/system/loki.service /etc/systemd/system/loki.service
+
+# Enable the service
+RUN systemctl enable loki.service 
+
+# Download the GPG key
+RUN curl --silent --location -O \
+    https://packages.grafana.com/gpg.key \
+    && echo "58052c148058ace26dbd01ce057afa5709fb9d39c8a8ab16800be3f42fc02ab2  gpg.key" \
+    | sha256sum --check - && cat gpg.key \
+    | gpg --dearmor \
+    | tee /etc/pki/rpm-gpg/RPM-GPG-KEY-grafana > /dev/null
+
+COPY etc/yum.repos.d/grafana.repo /etc/yum.repos.d/
+
+# Install Grafana
+RUN dnf \
+    install -y \
+    grafana \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+# Download a sample grafana.ini from grafana github repo
+RUN wget https://raw.githubusercontent.com/grafana/grafana/refs/heads/main/conf/sample.ini -O /etc/grafana/grafana.ini
+
+# Enable Grafana Server
+RUN systemctl enable grafana-server 
+
+# Expose ports
+EXPOSE 3100
+EXPOSE 3000 
+
+CMD [ "/sbin/init" ]
+
