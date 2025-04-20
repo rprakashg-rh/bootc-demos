@@ -1,4 +1,4 @@
-ami: ami-00a77c5f186609404
+ami: ami-0cfad8105ec0b9d4d
 instance_name: "grafanaloki"
 instance_type: t2.xlarge
 key_name: ec2

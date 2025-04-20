@@ -39,7 +39,8 @@ RUN mkdir -p /etc/loki /var/lib/loki \
     chown loki:loki /var/lib/loki
 
 # Download default config file, if requires in future could download and customize and COPY into container
-RUN wget https://raw.githubusercontent.com/grafana/loki/refs/heads/main/cmd/loki/loki-local-config.yaml -O /etc/loki/loki-config.yaml \
+RUN export LOKI_VERSION=$(curl -s https://api.github.com/repos/grafana/loki/releases/latest | grep tag_name | cut -d '"' -f 4) \
+    && wget https://raw.githubusercontent.com/grafana/loki/${LOKI_VERSION}/cmd/loki/loki-local-config.yaml -O /etc/loki/loki-config.yaml \
     && chown loki:loki /etc/loki/loki-config.yaml
 
 # Copy the systemd unit file
