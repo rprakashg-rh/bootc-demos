@@ -1,0 +1,6 @@
+- name: Deploy OTEL collector
+  hosts: vpac
+  gather_facts: yes
+  
+  tasks:
+  

@@ -1,0 +1,7 @@
+ami: ami-07cf823d76a03ac85
+instance_name: "mssql-node"
+instance_type: t2.xlarge
+key_name: ec2
+subnet_id: subnet-04a4a65fac116e496
+security_group_id: sg-065dc44fcf87d8b4c
+commands: []

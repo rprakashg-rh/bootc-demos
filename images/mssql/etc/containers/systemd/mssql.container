@@ -1,0 +1,30 @@
+[Unit]
+Description=Microsoft SQL Server
+After=network-online.target
+
+[Container]
+# Use the official SQL Server 2019 image for Linux
+Image=mcr.microsoft.com/mssql/server:2019-latest
+Pull=always
+
+# Environment variables for SQL Server
+Environment=ACCEPT_EULA=Y
+Environment=SA_PASSWORD=P@ssw0rd
+Environment=MSSQL_PID=Developer
+
+# Persist database files
+Volume=/var/opt/mssql:/var/opt/mssql:rw,z
+
+# Publish port 1433
+PublishPort=1433:1433
+
+# Set container name
+ContainerName=mssql
+
+[Service]
+# Restart container on failure
+Restart=on-failure
+User=mssql
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,37 @@
+# This Containerfile expects a secret named "creds" to contain
+# the registry pull secret.  To build, use e.g. 
+# podman build --secret id=creds,src=$HOME/.config/containers/auth.json ...
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+USER root
+
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
+# Install base packages
+RUN dnf \
+    --enablerepo=rhel-9-for-x86_64-baseos-rpms \
+    --enablerepo=rhel-9-for-x86_64-appstream-rpms \
+    install -y \
+    podman \
+    tmux \
+    mkpasswd \
+    && dnf clean all \
+    && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
+
+#COPY the quadlet file
+COPY etc/containers/systemd/mssql.container /etc/containers/systemd/mssql.container
+
+RUN /usr/libexec/podman/quadlet --dryrun
+
+#RUN curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo
+
+# Install sql tools
+#RUN yum install -y mssql-tools18 unixODBC-devel
+
+# Add mssql-tools to path
+#RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bash_profile
+
+CMD [ "/sbin/init" ]
