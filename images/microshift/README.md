@@ -42,8 +42,22 @@ $REGISTRY/$REGISTRY_USER/microshift-bootc
 ## Building AMI image for AWS
 Follow steps in this section to build an AMI image for running virtualized devices on AWS
 
-Set some environment variables
+Overlay cloud-init
 
+```sh
+cd ../cloud-init
+
+podman build \
+    --build-arg=FROM=$REGISTRY/$REGISTRY_USER/microshift-bootc \
+    -t $REGISTRY/$REGISTRY_USER/microshift-bootc:aws \
+    -f Containerfile .
+```
+
+Push image to registry
+
+```sh
+podman push $REGISTRY/$REGISTRY_USER/microshift-bootc:aws
+```
 
 Create an S3 bucket to store AMI artifacts
 
@@ -156,6 +170,6 @@ registry.redhat.io/rhel9/bootc-image-builder:latest \
 --aws-ami-name microshift-bootc-x86_64 \
 --aws-bucket bootc-amis \
 --aws-region us-west-2 \
-$REGISTRY/$REGISTRY_USER/microshift-bootc
+$REGISTRY/$REGISTRY_USER/microshift-bootc:aws
 ```
 

@@ -1,0 +1,21 @@
+[Unit]
+Description=Ignition SCADA Platform by Inductive Automation
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Label=app=ignition
+Image=docker.io/inductiveautomation/ignition:latest
+ContainerName=ignition
+Exec=-n ig-gw -a localhost -h 8088 -s 8043
+PublishPort=8088:8088
+PublishPort=8043:8043
+Volume=ignition.volume:/usr/local/bin/ignition/data:rw,z
+Environment=GATEWAY_ADMIN_USERNAME=admin
+Environment=GATEWAY_ADMIN_PASSWORD_FILE=/run/secrets/gateway-admin-password
+Environment=ACCEPT_IGNITION_EULA=Y
+Environment=IGNITION_EDITION=standard
+Environment=TZ=America/los_angeles
+
+[Install]
+WantedBy=default.target

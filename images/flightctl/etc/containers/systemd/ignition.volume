@@ -1,0 +1,5 @@
+[Unit]
+Description=Ignition Container Volume
+
+[Volume]
+Label=app=ignition

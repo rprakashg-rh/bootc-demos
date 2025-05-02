@@ -1,2 +1,3 @@
-# Ignore config.toml file
+# Ignore files
 !config.toml
+!README.md
