@@ -46,6 +46,7 @@ spec:
       systemd:
         matchPatterns:
         - flightctl-agent.service
+        - ignition.service
       resources:
       - monitorType: Disk
         samplingInterval: 5s
