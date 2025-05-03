@@ -21,9 +21,6 @@ RUN dnf \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
-RUN mkdir -p /etc/ignition/data \ 
-    && chmod 777 /etc/ignition/data
-
 COPY etc/containers/systemd/ignition.container /etc/containers/systemd/ignition.container
 
 RUN /usr/libexec/podman/quadlet --dryrun
