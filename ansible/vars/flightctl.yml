@@ -1,14 +1,11 @@
-#cloud-config
-users:
-- name: "{{ admin_user }}"
-  ssh_authorized_keys: 
-  - "{{ ssh_key }}"
-  groups: ["wheel"]
-  shell: /bin/bash
-  sudo: ['ALL=(ALL) NOPASSWD:ALL']
-
-{% if files is defined %}
-write_files:
+ami: ami-0db9f001996703267
+instance_name: "edge-node1"
+instance_type: t2.large
+key_name: ec2
+subnet_id: subnet-0fc3e98f1156fc645
+security_group_id: sg-01bdbef80407d36ca
+commands: []
+files:
 - path: /etc/flightctl/config.yaml
   permissions: '0755'
   owner: 'root:root'
@@ -24,10 +21,3 @@ write_files:
     management-service:
       authentication: {}
       service: {}
-{% endif %}
-
-runcmd:
-  - echo "Welcome to RHEL Image Mode!" > /etc/motd
-{% for command in commands %}
-  - {{ command }}
-{% endfor %}

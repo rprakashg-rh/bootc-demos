@@ -1,0 +1,69 @@
+apiVersion: v1alpha1
+kind: Fleet
+metadata:
+  name: "abb-demo-fleet"
+spec:
+  selector:
+    matchLabels:
+      region: "us-west-2"
+  template:
+    spec:
+      os:
+        image: quay.io/rgopinat/edge-device:aws
+      config:
+        - inline:
+          - content: |-
+              [Unit]
+              Description=Ignition SCADA Platform by Inductive Automation
+              After=network-online.target
+              Wants=network-online.target
+
+              [Container]
+              Label=app=ignition
+              Image=docker.io/inductiveautomation/ignition:latest
+              ContainerName=ignition
+              Exec=-n ig-gw -a localhost -h 8088 -s 8043
+              PublishPort=8088:8088
+              PublishPort=8043:8043
+              Volume=ignition.volume:/usr/local/bin/ignition/data:rw,z
+              Environment=GATEWAY_ADMIN_USERNAME=admin
+              Environment=GATEWAY_ADMIN_PASSWORD_FILE=/run/secrets/gateway-admin-password
+              Environment=ACCEPT_IGNITION_EULA=Y
+              Environment=IGNITION_EDITION=standard
+              Environment=TZ=America/los_angeles
+
+              [Install]
+              WantedBy=default.target
+            path: /etc/containers/systemd/ignition.container
+          - content: |-
+              [Unit]
+              Description=Ignition Container Volume
+
+              [Volume]
+              Label=app=ignition
+            path: /etc/containers/systemd/ignition.volume
+          name: quadlets      
+      systemd:
+        matchPatterns:
+        - flightctl-agent.service
+      resources:
+      - monitorType: Disk
+        samplingInterval: 5s
+        path: /
+        alertRules:
+        - severity: Warning
+          duration: 30m
+          percentage: 75
+          description: Disk space for application data is >75% full for over 30m.
+        - severity: Critical
+          duration: 10m
+          percentage: 90
+          description: Disk space for application data is >90% full over 10m.
+      hooks:
+        afterUpdating:
+        - if:
+            - path: /etc/containers/systemd/ignition.container
+              op: [created, updated, removed]
+          run: | 
+            systemctl daemon-reload \
+            systemctl start ignition.service

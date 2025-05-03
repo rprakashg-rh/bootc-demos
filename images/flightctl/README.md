@@ -1,6 +1,6 @@
 # FlightCTL demo
 
-Building Container Image
+## Building Container Image
 
 ```sh
 podman build --secret id=creds,src=$HOME/.config/containers/auth.json \
@@ -20,13 +20,15 @@ podman build \
     -t $REGISTRY/$REGISTRY_USER/edge-device:aws \
     -f Containerfile .
 ```
+
 Push image to registry
 
 ```sh
 podman push $REGISTRY/$REGISTRY_USER/edge-device:aws
 ```
+## Build ISO using BiB
 
-Build AMI using BiB
+## Build AMI using BiB
 
 ```sh
 sudo podman run \
@@ -42,8 +44,28 @@ sudo podman run \
     registry.redhat.io/rhel9/bootc-image-builder:latest \
     --local \
     --type ami \
-    --aws-ami-name ignition-x86_64 \
+    --aws-ami-name edge-device-x86_64 \
     --aws-bucket bootc-amis \
     --aws-region us-west-2 \
     $REGISTRY/$REGISTRY_USER/edge-device:aws
+```
+
+## Generate the enrollment credentials
+
+Get demouser password
+
+```sh
+kubectl get secret/keycloak-demouser-secret -n flightctl -o=jsonpath='{.data.password}' | base64 -d | pbcopy
+```
+
+Login to FlightCTL
+
+```sh
+./bin/flightctl login $FC_API_URL -u demouser -p $FC_PASS --insecure-skip-tls-verify
+```
+
+Get enrollment credentials
+
+```sh
+./bin/flightctl certificate request --signer=enrollment --expiration=365d --output=embedded > $HOME/secrets/agentconfig.yaml
 ```
