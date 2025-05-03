@@ -1,4 +1,7 @@
 **/.DS_Store
 ks/*
 
+ansible/templates/user-data.yaml.j2
+ansible/vars/flightctl.yml
+
 **/podman-build*
