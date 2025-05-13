@@ -21,6 +21,7 @@ RUN dnf \
     && dnf clean all \
     && rm -rf /var/{cache,log} /var/lib/{dnf,rhsm}
 
+RUN echo "Upgrade demo" > /etc/test.log
 #install flightctl agent    
 ADD etc etc
 

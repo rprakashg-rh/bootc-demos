@@ -66,5 +66,4 @@ spec:
             - path: /etc/containers/systemd/ignition.container
               op: [created, updated, removed]
           run: | 
-            systemctl daemon-reload \
-            systemctl start ignition.service
+            systemctl reboot

@@ -2,6 +2,11 @@ FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
 USER root
 
+COPY containers-auth.conf /usr/lib/tmpfiles.d/link-podman-credentials.conf
+RUN --mount=type=secret,id=creds,required=true cp /run/secrets/creds /usr/lib/container-auth.json && \
+    chmod 0600 /usr/lib/container-auth.json && \
+    ln -sr /usr/lib/container-auth.json /etc/ostree/auth.json
+
 COPY requirements.yml /home/requirements.yml
 
 # Install base system packages
@@ -39,6 +44,8 @@ RUN dnf \
 RUN yum \
     install -y \ 
     osbuild-composer composer-cli cockpit-composer bash-completion awscli
+
+RUN source /etc/bash_completion.d/composer-cli
 
 # Install ansible and run a playbook to configure this system with image builder
 RUN dnf \

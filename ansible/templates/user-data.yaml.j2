@@ -1,0 +1,14 @@
+#cloud-config
+users:
+- name: "{{ admin_user }}"
+  ssh_authorized_keys: 
+  - "{{ ssh_key }}"
+  groups: ["wheel"]
+  shell: /bin/bash
+  sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+runcmd:
+  - echo "Welcome to RHEL Image Mode!" > /etc/motd
+{% for command in commands %}
+  - {{ command }}
+{% endfor %}
