@@ -1,7 +1,7 @@
-ami: ami-0cfad8105ec0b9d4d
+ami: ami-06e38b903fd95d758
 instance_name: "grafanaloki"
 instance_type: t2.xlarge
 key_name: ec2
-subnet_id: subnet-0c4a1007f1a6e0533
-security_group_id: sg-00ec1e69e639c86ce
+subnet_id: subnet-0130c5ab1c29cfe49
+security_group_id: sg-0881eca30b3626c50
 commands: []

@@ -1,7 +1,7 @@
-ami: ami-062e8afc6befd5113
+ami: ami-0f4d806403b5cf15f
 instance_name: "influxnode"
 instance_type: t2.xlarge
 key_name: ec2
-subnet_id: subnet-0c4a1007f1a6e0533
-security_group_id: sg-00ec1e69e639c86ce
+subnet_id: subnet-0130c5ab1c29cfe49
+security_group_id: sg-0881eca30b3626c50
 commands: []

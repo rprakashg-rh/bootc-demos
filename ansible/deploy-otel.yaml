@@ -3,4 +3,62 @@
   gather_facts: yes
   
   tasks:
+  - name: Load secrets
+    ansible.builtin.include_vars:
+      file: "./vars/secrets.yml"
+      
+  - name: Create a temp folder to download otel contrib bits
+    ansible.builtin.tempfile:
+      state: directory
+    register: download_dir
+
+  - name: Download Otel collector contrib
+    ansible.builtin.get_url:
+      url: "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.124.1/otelcol-contrib_0.124.1_linux_386.tar.gz"
+      dest: "{{ download_dir.path }}/otelcol-contrib_0.124.1_linux_386.tar.gz"
+      mode: '0644'
   
+  - name: Untar file
+    ansible.builtin.unarchive:
+      src: "{{ download_dir.path }}/otelcol-contrib_0.124.1_linux_386.tar.gz"
+      dest: "/usr/local/bin/"
+
+  - name: Create otel config file
+    block:
+    - name: Create `/etc/otel` directory
+      ansible.builtin.file:
+        state: directory
+        src: /etc/otel
+    - name: Create otel config
+      ansible.builtin.template:
+        src: otelcol-config.yaml.j2
+        dest: /etc/otel/config.yaml
+
+  - name: Create systemd unit file
+    become: yes
+    ansible.builtin.copy:
+      dest: /etc/systemd/system/otelcol-contrib.service 
+      content: |
+        # /etc/systemd/system/otelcol-contrib.service
+
+        [Unit]
+        Description=OpenTelemetry Collector Contrib
+        After=network.target
+
+        [Service]
+        ExecStart=/usr/local/bin/otelcol-contrib --config /etc/otel/config.yaml
+        Restart=on-failure
+
+        [Install]
+        WantedBy=multi-user.target
+  
+  - name: Reload systemd
+    become: yes
+    ansible.builtin.systemd:
+      daemon_reload: 
+
+  - name: Enable otel collector
+    ansible.builtin.systemd:
+      name: otelcol-contrib.service
+      state: started
+      enabled: yes

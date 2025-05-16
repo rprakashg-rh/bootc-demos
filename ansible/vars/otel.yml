@@ -1,0 +1,7 @@
+loki:
+  endpoint: http://ec2-52-12-79-232.us-west-2.compute.amazonaws.com:3100
+influxdb:
+  endpoint: http://ec2-35-93-134-225.us-west-2.compute.amazonaws.com:8086
+  org: redhat
+  bucket: vpac-metrics
+  
