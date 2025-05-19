@@ -3,5 +3,6 @@ ks/*
 
 ansible/templates/user-data-with-files.yaml.j2
 ansible/vars/flightctl.yml
+ansible/inventory
 
 **/podman-build*

@@ -54,9 +54,3 @@ sudo podman run \
     --aws-region us-west-2 \
     $REGISTRY/$REGISTRY_USER/loki-bootc:aws
 ```
-
-Launch an EC2 instance
-
-```sh
-ansible-playbook --vault-password-file <(echo "$VAULT_SECRET") launch-ec2.yaml -e @vars/loki.yml
-```

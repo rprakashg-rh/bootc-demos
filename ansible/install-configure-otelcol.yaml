@@ -1,5 +1,6 @@
 - name: Deploy OTEL collector
   hosts: vpac
+  become: yes
   gather_facts: yes
   
   tasks:
@@ -22,20 +23,20 @@
     ansible.builtin.unarchive:
       src: "{{ download_dir.path }}/otelcol-contrib_0.124.1_linux_386.tar.gz"
       dest: "/usr/local/bin/"
+      remote_src: true
 
   - name: Create otel config file
     block:
     - name: Create `/etc/otel` directory
       ansible.builtin.file:
         state: directory
-        src: /etc/otel
+        path: /etc/otel
     - name: Create otel config
       ansible.builtin.template:
         src: otelcol-config.yaml.j2
         dest: /etc/otel/config.yaml
 
   - name: Create systemd unit file
-    become: yes
     ansible.builtin.copy:
       dest: /etc/systemd/system/otelcol-contrib.service 
       content: |
@@ -53,9 +54,8 @@
         WantedBy=multi-user.target
   
   - name: Reload systemd
-    become: yes
     ansible.builtin.systemd:
-      daemon_reload: 
+      daemon_reload: true
 
   - name: Enable otel collector
     ansible.builtin.systemd:
