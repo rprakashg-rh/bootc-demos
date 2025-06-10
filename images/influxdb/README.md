@@ -24,6 +24,11 @@ Push to registry
 ```sh
 podman push "$REGISTRY/$REGISTRY_USER/influxdb-bootc" 
 ```
+Build QCOW2
+
+```sh
+
+```
 
 Overlay cloud-init to base image
 

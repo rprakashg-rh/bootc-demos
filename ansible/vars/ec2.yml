@@ -1,6 +1,7 @@
-ami: ami-0aebe0a8c963d38dc
-instance_name: "influxnode"
-instance_type: t2.xlarge
+---
+ami: ami-0dc921650a088ecb2
+instance_name: microshift-412
+instance_type: t2.2xlarge
 key_name: ec2
 subnet_id: subnet-0ddef3ec4ea452aac
 security_group_id: sg-0fdc37bb13959088b

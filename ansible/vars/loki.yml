@@ -4,4 +4,5 @@ instance_type: t2.xlarge
 key_name: ec2
 subnet_id: subnet-0130c5ab1c29cfe49
 security_group_id: sg-0881eca30b3626c50
+storage: 50
 commands: []
