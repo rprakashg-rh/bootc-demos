@@ -33,4 +33,4 @@
     register: ec2_instance
   - name: Print public dns
     ansible.builtin.debug:
-      var: ec2_instance
+      var: ec2_instance.instances[0].public_dns_name

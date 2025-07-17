@@ -1,0 +1,9 @@
+---
+ami: ami-06c308fc41dbc9c80
+instance_name: rhem-server
+instance_type: t2.2xlarge
+key_name: ec2
+subnet_id: subnet-08afc0e1bac3da1ff
+security_group_id: sg-076bc30fb987de092
+storage: 50
+commands: []

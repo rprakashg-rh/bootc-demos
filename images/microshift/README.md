@@ -91,7 +91,7 @@ aws iam create-role \
 --query='Role.Arn' \
 --output=text | pbcopy
 ```
-Role Arn: `arn:aws:iam::695524278079:role/vmimport`
+Role Arn: `arn:aws:iam::143870465075:role/vmimport`
 
 Create role policy
 
@@ -142,12 +142,14 @@ aws iam create-policy \
 --output=text | pbcopy
 ```
 
+Role Policy ARN: `arn:aws:iam::143870465075:policy/vmimport_service_role_policy`
+
 Attach the Policy to Role
 
 ```sh
 aws iam attach-role-policy \
   --role-name=vmimport \
-  --policy-arn=arn:aws:iam::695524278079:policy/vmimport_service_role_policy
+  --policy-arn=arn:aws:iam::143870465075:policy/vmimport_service_role_policy
 ```
 
 
